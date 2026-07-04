@@ -1,0 +1,6 @@
+{
+  "name": "衡信 VeriCred 实力信任对接平台",
+  "description": "VeriCred (衡信) 是一款面向出海供需双方的企业实力信任对接平台，针对东南亚、非洲、印度、伊朗、欧盟等核心运营区域进行多维度资质核验、工商交叉对比与实力展示，构筑商贸信任基石。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
