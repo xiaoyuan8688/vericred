@@ -1,0 +1,222 @@
+/**
+ * 市场商家类型定义（从 marketService.ts 提取，供 contentLoader 使用）
+ */
+export interface MarketMerchant {
+  id: string;
+  nameCn: string;
+  nameEn: string;
+  market: 'china' | 'southeast' | 'africa' | 'india' | 'iran';
+  industry: 'machinery' | 'hardware' | 'textile' | 'chemical' | 'pharma' | 'electronics' | string;
+  addressCn: string;
+  addressEn: string;
+  verificationTypes: Array<'video' | 'registry' | 'customs' | 'cross' | string>;
+  trustScore: number;
+  establishedYear: number;
+  contactPerson: string;
+  certifiedOutput: string;
+  verificationLogs: string[];
+}
+
+export const SAMPLE_MARKET_MERCHANTS: MarketMerchant[] = [
+  {
+    id: "m-cn-001",
+    nameCn: "深圳宏泰电子元件制造厂",
+    nameEn: "Shenzhen Hongtai Electronic Components Co., Ltd.",
+    market: "china",
+    industry: "electronics",
+    addressCn: "广东省深圳市宝安区福海街道塘尾工业区A栋",
+    addressEn: "Block A, Tangwei Industrial Zone, Baoan District, Shenzhen, Guangdong, China",
+    verificationTypes: ["video", "registry", "cross"],
+    trustScore: 98,
+    establishedYear: 2014,
+    contactPerson: "林经理 (Manager Lin)",
+    certifiedOutput: "50,000,000 Units/Month",
+    verificationLogs: [
+      "2026-06-15: 远程视频实景探访设备成功连通，车间自动化贴片生产线24小时运转确认。",
+      "2026-06-16: 深圳市工商档案交叉核验完成，商事登记处于正常营业活跃状态。",
+      "2026-06-17: 获得国家高新技术企业(GRS)和ISO9001质管体系双重交叉资质认可。"
+    ]
+  },
+  {
+    id: "m-cn-002",
+    nameCn: "浙江重德机电装配股份公司",
+    nameEn: "Zhejiang Zhongde Mechatronics Assembly Corp.",
+    market: "china",
+    industry: "machinery",
+    addressCn: "浙江省宁波市北仑区黄山路88号",
+    addressEn: "No. 88 Huangshan Road, Beilun District, Ningbo, Zhejiang, China",
+    verificationTypes: ["registry", "customs", "cross"],
+    trustScore: 99,
+    establishedYear: 2011,
+    contactPerson: "陈工 (Engineer Chen)",
+    certifiedOutput: "8,500 Sets/Month",
+    verificationLogs: [
+      "2026-05-20: 浙江省市场监督管理局商事登记核实，注册资金 5500万 元已实缴。",
+      "2026-05-22: 宁波海关电子报关系统出口单据核验完成，近12个月离岸出口额达2.4亿美元。",
+      "2026-05-25: 本地第三方独立审计行出具财务健康报告，无任何信用违约或诉讼记录。"
+    ]
+  },
+  {
+    id: "m-cn-003",
+    nameCn: "佛山万达五金建材制造厂",
+    nameEn: "Foshan Wanda Hardware & Building Materials Factory",
+    market: "china",
+    industry: "hardware",
+    addressCn: "广东省佛山市南海区狮山工业园B区12号",
+    addressEn: "No. 12 Area B, Shishan Industrial Park, Nanhai District, Foshan, Guangdong, China",
+    verificationTypes: ["video", "registry", "customs"],
+    trustScore: 97,
+    establishedYear: 2016,
+    contactPerson: "叶厂长 (Director Ye)",
+    certifiedOutput: "12,000 Tons/Month",
+    verificationLogs: [
+      "2026-06-02: 远程视频流媒体镜头成功对准挤压模具车间，实时红外熔融监测状态优良。",
+      "2026-06-03: 佛山市南海区工商行政档案在线调取核验无误。",
+      "2026-06-05: 5月报关出口至东南亚及中东的五金管件合规率100%。"
+    ]
+  },
+  {
+    id: "m-cn-004",
+    nameCn: "山东科创制药原料有限公司",
+    nameEn: "Shandong Ke创 Pharmaceutical Raw Materials Co., Ltd.",
+    market: "china",
+    industry: "pharma",
+    addressCn: "山东省济南市高新技术开发区药谷二路",
+    addressEn: "Yaogu 2nd Road, High-Tech Development Zone, Jinan, Shandong, China",
+    verificationTypes: ["registry", "cross"],
+    trustScore: 96,
+    establishedYear: 2018,
+    contactPerson: "刘总监 (Director Liu)",
+    certifiedOutput: "1,200 Tons/Month",
+    verificationLogs: [
+      "2026-04-18: 山东省药监局GMP符合性交叉比对通过，相关原药纯度测试符合国家标准。",
+      "2026-04-20: 查询全国企业信用信息公示系统，无任何环境污染或行政处罚记录。"
+    ]
+  },
+  {
+    id: "m-cn-005",
+    nameCn: "江苏恒利纺织印染有限公司",
+    nameEn: "Jiangsu Hengli Textile & Dyeing Co., Ltd.",
+    market: "china",
+    industry: "textile",
+    addressCn: "江苏省苏州市吴江区盛泽镇纺织大路",
+    addressEn: "Textile Avenue, Shengze Town, Wujiang District, Suzhou, Jiangsu, China",
+    verificationTypes: ["video", "customs"],
+    trustScore: 95,
+    establishedYear: 2015,
+    contactPerson: "周经理 (Manager Zhou)",
+    certifiedOutput: "8,000,000 Meters/Month",
+    verificationLogs: [
+      "2026-06-21: 远程高清安防网络流成功获取，环保排污实时监测接口数值符合环保规定。",
+      "2026-06-23: 上海港海运出货单据、提单(B/L)与工厂实际产量实现100%账实吻合。"
+    ]
+  },
+  {
+    id: "m-cn-006",
+    nameCn: "上海德胜绿色化工科技有限公司",
+    nameEn: "Shanghai Desheng Green Chemical Tech Co., Ltd.",
+    market: "china",
+    industry: "chemical",
+    addressCn: "上海市金山区精细化工产业园9区",
+    addressEn: "Sector 9, Fine Chemical Industrial Park, Jinshan District, Shanghai, China",
+    verificationTypes: ["video", "registry", "cross"],
+    trustScore: 97,
+    establishedYear: 2017,
+    contactPerson: "张博士 (Dr. Zhang)",
+    certifiedOutput: "3,500 Tons/Month",
+    verificationLogs: [
+      "2026-05-11: 工商局档案深度核准通过，注册专利权属无纠纷。",
+      "2026-05-13: 探访装车储罐防爆级别现场，安全生产信息化集成系统符合防爆防毒一级规范。"
+    ]
+  },
+  {
+    id: "m-sea-001",
+    nameCn: "越南海防德和精密五金厂",
+    nameEn: "Vietnam Dehe Hardware Mfg Co., Ltd.",
+    market: "southeast",
+    industry: "hardware",
+    addressCn: "越南海防市安阳工业园5号路",
+    addressEn: "Road No. 5, An Duong Industrial Zone, Hai Phong City, Vietnam",
+    verificationTypes: ["video", "registry", "customs"],
+    trustScore: 96,
+    establishedYear: 2019,
+    contactPerson: "Tran Van (Audit Liaison)",
+    certifiedOutput: "2,400 Tons/Month",
+    verificationLogs: [
+      "Verify on-site video feed: Machinery active and functional.",
+      "Customs cross check: Shipping ledgers logged at Haiphong port verified."
+    ]
+  },
+  {
+    id: "m-sea-002",
+    nameCn: "吉隆坡精电电子组装厂",
+    nameEn: "Kuala Lumpur Smart Electronics Assembly",
+    market: "southeast",
+    industry: "electronics",
+    addressCn: "马来西亚雪兰莪州八打灵再也高新园区",
+    addressEn: "Petaling Jaya Industrial Sector, Selangor, Kuala Lumpur, Malaysia",
+    verificationTypes: ["video", "cross"],
+    trustScore: 94,
+    establishedYear: 2021,
+    contactPerson: "Lim Wei (Operations Coordinator)",
+    certifiedOutput: "1,500,000 Boards/Month",
+    verificationLogs: [
+      "On-site camera feed connected via residential proxy.",
+      "Regulatory audit: Compliant Malaysia SSM corporate filings confirmed."
+    ]
+  },
+  {
+    id: "m-af-001",
+    nameCn: "拉各斯重工机电装备有限公司",
+    nameEn: "Lagos Heavy Industry Mechatronics Ltd.",
+    market: "africa",
+    industry: "machinery",
+    addressCn: "尼日利亚拉各斯莱基自贸区4区",
+    addressEn: "Zone 4, Lekki Free Trade Zone, Lagos, Nigeria",
+    verificationTypes: ["registry", "cross"],
+    trustScore: 91,
+    establishedYear: 2018,
+    contactPerson: "Chinedu (Lekki Auditor)",
+    certifiedOutput: "450 Heavy Units/Month",
+    verificationLogs: [
+      "Cross database checks: Verified Lekki FTZ corporate registries.",
+      "Compliance audit: Double checked against Nigerian Custom Service (NCS) clearances."
+    ]
+  },
+  {
+    id: "m-in-001",
+    nameCn: "孟买精细原料药中试基地",
+    nameEn: "Mumbai Fine API Pharmaceutical Laboratory",
+    market: "india",
+    industry: "pharma",
+    addressCn: "印度马哈拉施特拉邦孟买塔纳工业园",
+    addressEn: "Thane Industrial Estate, Mumbai, Maharashtra, India",
+    verificationTypes: ["video", "registry", "cross"],
+    trustScore: 95,
+    establishedYear: 2016,
+    contactPerson: "A. Sharma (Liaison)",
+    certifiedOutput: "80 Tons/Month (API grade)",
+    verificationLogs: [
+      "Chemical compliance: Indian FDA standard verification completed.",
+      "Visual site stream active: Laboratory testing reactors functional."
+    ]
+  },
+  {
+    id: "m-ir-001",
+    nameCn: "德黑兰特种聚合物石化工业联合体",
+    nameEn: "Tehran Specialty Polymer Petrochemical Complex",
+    market: "iran",
+    industry: "chemical",
+    addressCn: "伊朗德黑兰省卡拉季石化园区5街",
+    addressEn: "5th Ave, Alborz Petrochemical District, Karaj, Tehran, Iran",
+    verificationTypes: ["registry", "customs", "cross"],
+    trustScore: 92,
+    establishedYear: 2013,
+    contactPerson: "H. Rezaei",
+    certifiedOutput: "18,000 Tons/Month",
+    verificationLogs: [
+      "Verified on-site: Polymer silos active and compliant with National Petrochemical Co (NPC).",
+      "Sanctions bypass legal clearance check completed by legal auditors."
+    ]
+  }
+];

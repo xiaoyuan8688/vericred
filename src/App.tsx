@@ -3,6 +3,7 @@ import SplashPage from './components/SplashPage';
 import Navbar from './components/Navbar';
 import MainPortal from './components/MainPortal';
 import { Language } from './types';
+import { preloadAllContent } from './services/contentLoader';
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('cn');
@@ -11,6 +12,13 @@ export default function App() {
   const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
     return localStorage.getItem('vericred_admin_mode') === 'true';
   });
+
+  // 启动时预加载 CMS 数据（供应商 / 商家 / 供需匹配）
+  useEffect(() => {
+    preloadAllContent().catch((err) =>
+      console.warn('[App] 内容预加载未完成，使用内置数据:', err)
+    );
+  }, []);
 
   const toggleAdminMode = () => {
     const nextVal = !isAdminMode;
