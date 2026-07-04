@@ -1,5 +1,16 @@
 backend:
-  name: local
+  name: github
+  repo: xiaoyuan8688/vericred
+  branch: main
+  base_url: https://vericred.pages.dev
+  auth_endpoint: auth
+  squash_merges: true
+  commit_messages:
+    create: "content: 新增 {{collection}}【{{slug}}】"
+    update: "content: 更新 {{collection}}【{{slug}}】"
+    delete: "content: 删除 {{collection}}【{{slug}}】"
+    uploadMedia: "media: 上传图片 {{path}}"
+    deleteMedia: "media: 删除图片 {{path}}"
 
 media_folder: "public/images/uploads"
 public_folder: "/images/uploads"
