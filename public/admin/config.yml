@@ -1,9 +1,7 @@
 backend:
-  name: github
-  repo: xiaoyuan8688/vericred
+  name: git-gateway
   branch: main
-  base_url: https://vericred.pages.dev
-  auth_endpoint: auth
+  # 无需 base_url/auth_endpoint — 认证由 Cloudflare Functions 自动处理
   squash_merges: true
   commit_messages:
     create: "content: 新增 {{collection}}【{{slug}}】"

@@ -10,6 +10,27 @@
   </style>
 </head>
 <body>
+  <!-- 阻止 Decap CMS 自动初始化，以便注册 auth callback -->
+  <script>window.CMS_MANUAL_INIT = true;</script>
+  <!-- 加载 Decap CMS（jsdelivr CDN，锁定 3.6.1） -->
   <script src="https://cdn.jsdelivr.net/npm/decap-cms@3.6.1/dist/decap-cms.js"></script>
+  <script>
+    // 注册自动认证回调：从 Cloudflare Function 获取 GitHub PAT
+    // 此回调在 CMS 初始化时自动调用，无需用户点击任何按钮
+    CMS.registerAuthCallback(async () => {
+      try {
+        const res = await fetch('/api/token');
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        return { token: data.token };
+      } catch (err) {
+        console.error('CMS 自动认证失败:', err);
+        // 返回 null 则 CMS 显示登录页，但本设计预期 PAT 始终有效
+        return null;
+      }
+    });
+    // 手动初始化 CMS（config 从 config.yml 加载）
+    CMS.init();
+  </script>
 </body>
 </html>
