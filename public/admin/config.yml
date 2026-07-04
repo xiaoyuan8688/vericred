@@ -1,5 +1,6 @@
 backend:
-  name: git-gateway
+  name: github
+  repo: xiaoyuan8688/vericred
   branch: main
   squash_merges: true
   commit_messages:
