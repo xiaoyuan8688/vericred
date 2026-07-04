@@ -34,11 +34,104 @@ interface FactoryDetailPageProps {
 
 type TabType = 'images' | 'products' | 'video' | 'registry' | 'cross';
 
+// Local Caching Interface & Helpers
+interface LocalCache {
+  timestamp: number;
+  merchant?: MarketMerchant | null;
+  factoryImagesData?: FactoryImagesVerification | null;
+  productPhotosData?: ProductPhotosVerification | null;
+  videoData?: VideoVerification | null;
+  registryData?: RegistryVerification | null;
+  riskData?: RiskVerification | null;
+  crossData?: CrossVerification | null;
+}
+
+const getLocalCache = (id: string): LocalCache | null => {
+  try {
+    const raw = localStorage.getItem(`factory_cache_${id}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as LocalCache;
+    // Check 10 minutes timeout (10 * 60 * 1000 ms)
+    if (Date.now() - parsed.timestamp < 10 * 60 * 1000) {
+      return parsed;
+    } else {
+      localStorage.removeItem(`factory_cache_${id}`);
+    }
+  } catch (e) {
+    console.error("Failed to read local cache:", e);
+  }
+  return null;
+};
+
+const saveLocalCache = (id: string, updates: Partial<LocalCache>) => {
+  try {
+    const raw = localStorage.getItem(`factory_cache_${id}`);
+    const current = raw ? (JSON.parse(raw) as LocalCache) : { timestamp: Date.now() };
+    const merged = {
+      ...current,
+      ...updates,
+      timestamp: current.timestamp || Date.now()
+    };
+    localStorage.setItem(`factory_cache_${id}`, JSON.stringify(merged));
+  } catch (e) {
+    console.error("Failed to save local cache:", e);
+  }
+};
+
+// Retry and Timeout Utilities
+function withTimeout<T>(promise: Promise<T>, ms = 5000): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error("TIMEOUT"));
+    }, ms);
+    promise.then(
+      (res) => {
+        clearTimeout(timer);
+        resolve(res);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
+async function fetchWithRetry<T>(fn: () => Promise<T>, retries = 3, delay = 300): Promise<T> {
+  let lastError: any;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt < retries) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw lastError;
+}
+
 export default function FactoryDetailPage({ id, language, onBack }: FactoryDetailPageProps) {
   const [merchant, setMerchant] = useState<MarketMerchant | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('images');
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab === 'images') return 'images';
+      if (tab === 'product') return 'products';
+      if (tab === 'video') return 'video';
+      if (tab === 'registry') return 'registry';
+      if (tab === 'cross') return 'cross';
+    } catch (e) {
+      console.error(e);
+    }
+    return 'images';
+  });
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isFromCache, setIsFromCache] = useState<boolean>(false);
 
   // Decoupled response containers
   const [videoData, setVideoData] = useState<VideoVerification | null>(null);
@@ -60,21 +153,54 @@ export default function FactoryDetailPage({ id, language, onBack }: FactoryDetai
   // Playback mock simulation state
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
 
-  // Load general profile first
+  // Sync tab status to URL parameters
   useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const currentTab = params.get('tab');
+      const targetTabParam = activeTab === 'products' ? 'product' : activeTab;
+      if (currentTab !== targetTabParam) {
+        params.set('tab', targetTabParam);
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState(null, '', newUrl);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [activeTab]);
+
+  // Load general profile first (with caching and retry support)
+  useEffect(() => {
+    const cache = getLocalCache(id);
+    if (cache && cache.merchant) {
+      setMerchant(cache.merchant);
+      if (cache.factoryImagesData) setFactoryImagesData(cache.factoryImagesData);
+      if (cache.productPhotosData) setProductPhotosData(cache.productPhotosData);
+      if (cache.videoData) setVideoData(cache.videoData);
+      if (cache.registryData) setRegistryData(cache.registryData);
+      if (cache.riskData) setRiskData(cache.riskData);
+      if (cache.crossData) setCrossData(cache.crossData);
+      setIsFromCache(true);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setFetchError(null);
-    fetchMerchantById(id)
+    setIsFromCache(false);
+
+    fetchWithRetry(() => fetchMerchantById(id))
       .then((m) => {
         if (!m) {
           setFetchError(language === 'cn' ? '该工厂档案不存在' : 'This factory file does not exist');
         } else {
           setMerchant(m);
+          saveLocalCache(id, { merchant: m, timestamp: Date.now() });
         }
         setIsLoading(false);
       })
       .catch((err) => {
-        setFetchError(language === 'cn' ? '档案加载出错' : 'Error loading profile: ' + err.message);
+        setFetchError(language === 'cn' ? '数据加载异常，可点击手动重试' : 'Data loading exception, click to retry manually');
         setIsLoading(false);
       });
   }, [id, language]);
@@ -88,51 +214,63 @@ export default function FactoryDetailPage({ id, language, onBack }: FactoryDetai
     if (activeTab === 'images') {
       if (!factoryImagesData) {
         setTabLoading(true);
-        fetchFactoryImages(id)
+        fetchWithRetry(() => withTimeout(fetchFactoryImages(id), 5000))
           .then((data) => {
             setFactoryImagesData(data);
             setCurrentImageIndex(0);
+            saveLocalCache(id, { factoryImagesData: data });
             setTabLoading(false);
           })
           .catch((err) => {
-            setTabError(language === 'cn' ? `厂区影像档案暂未调取成功，请稍后重试` : `Factory images service temporary load fault. Please retry later.`);
+            if (err.message === "TIMEOUT") {
+              setTabError(language === 'cn' ? '实拍影像资源加载失败' : 'Real image resource loading failed');
+            } else {
+              setTabError(language === 'cn' ? '数据加载异常，可点击手动重试' : 'Data loading exception, click to retry manually');
+            }
             setTabLoading(false);
           });
       }
     } else if (activeTab === 'products') {
       if (!productPhotosData) {
         setTabLoading(true);
-        fetchProductPhotos(id)
+        fetchWithRetry(() => withTimeout(fetchProductPhotos(id), 5000))
           .then((data) => {
             setProductPhotosData(data);
+            saveLocalCache(id, { productPhotosData: data });
             setTabLoading(false);
           })
           .catch((err) => {
-            setTabError(language === 'cn' ? `产品实拍档案暂未调取成功，请稍后重试` : `Product photos service temporary load fault. Please retry later.`);
+            if (err.message === "TIMEOUT") {
+              setTabError(language === 'cn' ? '实拍影像资源加载失败' : 'Real image resource loading failed');
+            } else {
+              setTabError(language === 'cn' ? '数据加载异常，可点击手动重试' : 'Data loading exception, click to retry manually');
+            }
             setTabLoading(false);
           });
       }
     } else if (activeTab === 'video' && !videoData) {
       setTabLoading(true);
-      fetchVideoVerification(id)
+      fetchWithRetry(() => fetchVideoVerification(id))
         .then((data) => {
           setVideoData(data);
+          saveLocalCache(id, { videoData: data });
           setTabLoading(false);
         })
         .catch((err) => {
-          setTabError(language === 'cn' ? `远程视频调用失败 (${VIDEO_API_URL}/${id})` : `Failed to load video stream (${VIDEO_API_URL}/${id})`);
+          setTabError(language === 'cn' ? '数据加载异常，可点击手动重试' : 'Data loading exception, click to retry manually');
           setTabLoading(false);
         });
     } else if (activeTab === 'registry') {
       if (!registryData) {
         setTabLoading(true);
-        fetchRegistryVerification(id)
+        fetchWithRetry(() => fetchRegistryVerification(id))
           .then((data) => {
             setRegistryData(data);
+            saveLocalCache(id, { registryData: data });
             setTabLoading(false);
           })
           .catch((err) => {
-            setTabError(language === 'cn' ? `商事档案调用失败 (${REGISTRY_API_URL}/${id})` : `Failed to load corporate registry registry (${REGISTRY_API_URL}/${id})`);
+            setTabError(language === 'cn' ? '数据加载异常，可点击手动重试' : 'Data loading exception, click to retry manually');
             setTabLoading(false);
           });
       }
@@ -140,25 +278,35 @@ export default function FactoryDetailPage({ id, language, onBack }: FactoryDetai
       if (!riskData && !riskLoading) {
         setRiskLoading(true);
         setRiskError(null);
-        fetchRiskVerification(id)
+        fetchWithRetry(() => fetchRiskVerification(id))
           .then((data) => {
-            setRiskData(data);
+            if (!data || (!data.level && (!data.violations || data.violations.length === 0))) {
+              const fallback: RiskVerification = { id, level: 'none', violations: [] };
+              setRiskData(fallback);
+              saveLocalCache(id, { riskData: fallback });
+            } else {
+              setRiskData(data);
+              saveLocalCache(id, { riskData: data });
+            }
             setRiskLoading(false);
           })
           .catch((err) => {
-            setRiskError(language === 'cn' ? '风险信息暂未加载，请稍后刷新查看' : 'Risk details failed to load, please refresh later to view.');
+            const fallback: RiskVerification = { id, level: 'none', violations: [] };
+            setRiskData(fallback);
+            saveLocalCache(id, { riskData: fallback });
             setRiskLoading(false);
           });
       }
     } else if (activeTab === 'cross' && !crossData) {
       setTabLoading(true);
-      fetchCrossVerification(id)
+      fetchWithRetry(() => fetchCrossVerification(id))
         .then((data) => {
           setCrossData(data);
+          saveLocalCache(id, { crossData: data });
           setTabLoading(false);
         })
         .catch((err) => {
-          setTabError(language === 'cn' ? `多维资质交叉验证调用失败 (${CROSS_API_URL}/${id})` : `Failed to load cross-match verification records (${CROSS_API_URL}/${id})`);
+          setTabError(language === 'cn' ? '数据加载异常，可点击手动重试' : 'Data loading exception, click to retry manually');
           setTabLoading(false);
         });
     }
@@ -201,8 +349,23 @@ export default function FactoryDetailPage({ id, language, onBack }: FactoryDetai
           {fetchError || (language === 'cn' ? '该工厂档案不存在' : 'This factory file does not exist')}
         </p>
         <button
-          onClick={onBack}
+          onClick={() => {
+            try {
+              localStorage.removeItem(`factory_cache_${id}`);
+              setIsFromCache(false);
+            } catch (e) {
+              console.error(e);
+            }
+            setFetchError(null);
+            setIsLoading(true);
+          }}
           className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-mono font-bold text-slate-200 border border-slate-700 rounded-lg cursor-pointer transition-colors"
+        >
+          {language === 'cn' ? '手动重试' : 'Retry'}
+        </button>
+        <button
+          onClick={onBack}
+          className="w-full py-2 bg-slate-950 hover:bg-slate-900 text-xs font-mono text-slate-400 border border-slate-850 rounded-lg cursor-pointer transition-colors"
         >
           &larr; {language === 'cn' ? '返回市场列表' : 'Return to Market'}
         </button>
@@ -229,6 +392,17 @@ export default function FactoryDetailPage({ id, language, onBack }: FactoryDetai
           <span className="text-cyan-400">{merchant.id.toUpperCase()}</span>
         </div>
       </div>
+
+      {isFromCache && (
+        <div className="mb-6 p-3 bg-cyan-950/20 border border-cyan-800/30 rounded-xl flex items-center gap-2 text-[11px] text-slate-400 font-mono">
+          <Lock className="h-3.5 w-3.5 text-cyan-400 animate-pulse flex-shrink-0" />
+          <span>
+            {language === 'cn' 
+              ? '缓存数据10分钟内有效，超时将自动同步最新官方公示内容。' 
+              : 'Cached data valid for 10 minutes, will automatically sync with the latest official public content upon timeout.'}
+          </span>
+        </div>
+      )}
 
       {/* 2. Top Banner / Meta Info (Always visible, clean dark sci-fi look) */}
       <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 mb-8 relative overflow-hidden shadow-xl">
@@ -360,16 +534,25 @@ export default function FactoryDetailPage({ id, language, onBack }: FactoryDetai
             <span>{tabError}</span>
             <button
               onClick={() => {
+                try {
+                  localStorage.removeItem(`factory_cache_${id}`);
+                  setIsFromCache(false);
+                } catch (e) {
+                  console.error(e);
+                }
                 // Clear state to force re-fetch
                 if (activeTab === 'images') setFactoryImagesData(null);
                 else if (activeTab === 'products') setProductPhotosData(null);
                 else if (activeTab === 'video') setVideoData(null);
-                else if (activeTab === 'registry') setRegistryData(null);
+                else if (activeTab === 'registry') {
+                  setRegistryData(null);
+                  setRiskData(null);
+                }
                 else if (activeTab === 'cross') setCrossData(null);
               }}
-              className="mt-2 px-3 py-1 bg-rose-900/30 hover:bg-rose-900/50 border border-rose-800 text-slate-100 rounded text-xs transition-colors cursor-pointer"
+              className="mt-2 px-3 py-1.5 bg-rose-900/40 hover:bg-rose-900/60 border border-rose-800 text-slate-100 rounded text-xs font-bold transition-colors cursor-pointer"
             >
-              {language === 'cn' ? '重试连接' : 'Retry API Call'}
+              {language === 'cn' ? '手动重试' : 'Retry Manual'}
             </button>
           </div>
         ) : (
@@ -460,7 +643,7 @@ export default function FactoryDetailPage({ id, language, onBack }: FactoryDetai
                   </div>
                 ) : (
                   <div className="py-12 text-center text-slate-500 font-sans">
-                    {language === 'cn' ? '暂无影像数据' : 'No images found'}
+                    {language === 'cn' ? '暂无实拍存档资料' : 'No real shots archived'}
                   </div>
                 )}
               </div>
@@ -537,7 +720,7 @@ export default function FactoryDetailPage({ id, language, onBack }: FactoryDetai
                   </div>
                 ) : (
                   <div className="py-12 text-center text-slate-500 font-sans">
-                    {language === 'cn' ? '暂无产品图片数据' : 'No product photos found'}
+                    {language === 'cn' ? '暂无实拍存档资料' : 'No real shots archived'}
                   </div>
                 )}
               </div>
@@ -683,12 +866,19 @@ export default function FactoryDetailPage({ id, language, onBack }: FactoryDetai
                                   {language === 'cn' ? '高风险' : 'High Risk'}
                                 </span>
                               )}
+                              {riskData.level === 'none' && (
+                                <span className="text-xs font-black text-slate-400 flex items-center gap-1 mt-0.5">
+                                  <span className="h-1.5 w-1.5 bg-slate-400 rounded-full"></span>
+                                  {language === 'cn' ? '暂无公示风控' : 'No Risk Record'}
+                                </span>
+                              )}
                             </div>
                             
                             <div className="text-[9px] text-slate-400 leading-tight border-l border-slate-850 pl-2 max-w-[120px] font-sans">
                               {riskData.level === 'low' && (language === 'cn' ? '无行政处罚、经营异常、司法冻结记录' : 'No warnings, penalties, or freezes.')}
                               {riskData.level === 'medium' && (language === 'cn' ? '存在轻微经营预警记录，无行政处罚' : 'Minor warning records, no penalties.')}
                               {riskData.level === 'high' && (language === 'cn' ? '包含行政处罚、列入经营异常名录、股权冻结、失信被执行人等记录' : 'Includes administrative actions, penalties or freezes.')}
+                              {riskData.level === 'none' && (language === 'cn' ? '暂无公示风控记录，不抛出报错页面' : 'No corporate risk records found.')}
                             </div>
                           </div>
                         ) : null}

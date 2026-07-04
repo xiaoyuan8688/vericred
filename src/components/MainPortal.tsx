@@ -29,7 +29,7 @@ import {
   RegistryVerification,
   CrossVerification
 } from '../services/marketService';
-import { VIDEO_API_URL, REGISTRY_API_URL, CROSS_API_URL } from '../config/apiEndpoints';
+import { VIDEO_API_URL, REGISTRY_API_URL, CROSS_API_URL, SYSTEM_VERSION } from '../config/apiEndpoints';
 import FactoryDetailPage from './FactoryDetailPage';
 
 
@@ -2601,8 +2601,8 @@ export default function MainPortal({ language, setLanguage, onShowIntro, activeS
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-right">
               <span>GDPR COGNITIVE // CLOUDFLARE Pages</span>
-              <span className="text-cyan-400 font-bold">VerCred v1.0</span>
-              <span className="text-slate-500">({language === 'cn' ? '静态预置版本，方便迭代区分' : 'Static Preset Version'})</span>
+              <span className="text-cyan-400 font-bold">{SYSTEM_VERSION}</span>
+              <span className="text-slate-500">({language === 'cn' ? '系统动态读取版本配置' : 'Dynamic Version Config'})</span>
             </div>
           </div>
 

@@ -1,4 +1,5 @@
 import { getApiConfig } from '../config/apiConfig';
+import { applySecurityShield } from './securityShield';
 
 export interface FieldInspectionParams {
   companyName: string;
@@ -63,6 +64,7 @@ export interface CustomsResult {
  * Independent callable entry point for multi-agent dispatch to physical factories.
  */
 export async function verifyFieldInspection(params: FieldInspectionParams): Promise<FieldInspectionResult> {
+  await applySecurityShield();
   const config = getApiConfig();
   console.log(`[Agent Hub] [Plate ①] Initiating On-Site Field Inspection for: ${params.companyName} at Region: ${params.region}`);
   
@@ -87,6 +89,7 @@ export async function verifyFieldInspection(params: FieldInspectionParams): Prom
  * Independent callable entry point for multi-agent querying of industrial and commercial registries.
  */
 export async function verifyBusinessRegistry(params: BusinessRegistryParams): Promise<BusinessRegistryResult> {
+  await applySecurityShield();
   const config = getApiConfig();
   const endpoint = config.corporateRegistryUrl;
   console.log(`[Agent Hub] [Plate ②] Querying official corporate registry at ${endpoint} for: ${params.companyName}`);
@@ -108,6 +111,7 @@ export async function verifyBusinessRegistry(params: BusinessRegistryParams): Pr
  * Independent callable entry point for multi-agent social media footprint analysis.
  */
 export async function verifySocialProfile(params: SocialProfileParams): Promise<SocialProfileResult> {
+  await applySecurityShield();
   const config = getApiConfig();
   const endpoint = config.socialMediaDataUrl;
   console.log(`[Agent Hub] [Plate ③] Querying social media indicators at ${endpoint} for: ${params.companyName}`);
@@ -129,6 +133,7 @@ export async function verifySocialProfile(params: SocialProfileParams): Promise<
  * Independent callable entry point for customs and certificate consistency verification.
  */
 export async function verifyCredentials(params: CustomsParams): Promise<CustomsResult> {
+  await applySecurityShield();
   const config = getApiConfig();
   const endpoint = config.customsDocumentUrl;
   console.log(`[Agent Hub] [Plate ④] Invoking customs validation check at ${endpoint} for: ${params.companyName}`);

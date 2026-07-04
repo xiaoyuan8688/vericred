@@ -231,6 +231,23 @@ export const SAMPLE_MARKET_MERCHANTS: MarketMerchant[] = [
 ];
 
 import { API_BASE_URL, FACTORY_DETAIL_URL, VIDEO_API_URL, REGISTRY_API_URL, CROSS_API_URL, RISK_API_URL, FACTORY_IMAGES_API_URL, PRODUCT_PHOTOS_API_URL } from '../config/apiEndpoints';
+import { applySecurityShield } from './securityShield';
+
+/**
+ * Helper to validate if an endpoint URL is configured.
+ * If empty, alerts and immediately terminates the network flow.
+ */
+function validateEndpoint(url: string) {
+  if (!url || url.trim() === '') {
+    const errorMsg = "服务网关地址尚未配置，请检查系统配置";
+    try {
+      window.alert(errorMsg);
+    } catch (e) {
+      console.warn("window.alert blocked:", e);
+    }
+    throw new Error(errorMsg);
+  }
+}
 
 export interface PaginatedMerchants {
   data: MarketMerchant[];
@@ -261,6 +278,8 @@ export interface FetchMarketMerchantsParams {
  * Leverages API_BASE_URL to communicate with the headless worker backend securely.
  */
 export async function fetchMarketMerchants(params: FetchMarketMerchantsParams): Promise<PaginatedMerchants> {
+  await applySecurityShield();
+  validateEndpoint(API_BASE_URL);
   const config = getApiConfig();
   const page = params.page || 1;
   const size = params.size || 4;
@@ -311,6 +330,8 @@ export async function fetchMarketMerchants(params: FetchMarketMerchantsParams): 
  * video audit streams, custom dispatch records, and structural certificates.
  */
 export async function fetchFactoryDetail(id: string): Promise<FactoryDetail> {
+  await applySecurityShield();
+  validateEndpoint(FACTORY_DETAIL_URL);
   console.log(`[API GATEWAY] Requesting detailed dossier for id: ${id} from endpoint: ${FACTORY_DETAIL_URL}`);
 
   // Real world integration:
@@ -353,6 +374,7 @@ export async function fetchFactoryDetail(id: string): Promise<FactoryDetail> {
  * Fetch a single merchant's general profile.
  */
 export async function fetchMerchantById(id: string): Promise<MarketMerchant | null> {
+  await applySecurityShield();
   const merchant = SAMPLE_MARKET_MERCHANTS.find(m => m.id === id);
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -410,6 +432,8 @@ export interface CrossVerification {
  * Resolves back to config path: VIDEO_API_URL + `/${id}`
  */
 export async function fetchVideoVerification(id: string): Promise<VideoVerification> {
+  await applySecurityShield();
+  validateEndpoint(VIDEO_API_URL);
   console.log(`[API GATEWAY] Requesting Video verification from: ${VIDEO_API_URL}/${id}`);
   
   // Production mapping example:
@@ -443,6 +467,8 @@ export async function fetchVideoVerification(id: string): Promise<VideoVerificat
  * Resolves back to config path: REGISTRY_API_URL + `/${id}`
  */
 export async function fetchRegistryVerification(id: string): Promise<RegistryVerification> {
+  await applySecurityShield();
+  validateEndpoint(REGISTRY_API_URL);
   console.log(`[API GATEWAY] Requesting Commercial Registry ledger from: ${REGISTRY_API_URL}/${id}`);
   
   const merchant = SAMPLE_MARKET_MERCHANTS.find(m => m.id === id);
@@ -477,6 +503,8 @@ export async function fetchRegistryVerification(id: string): Promise<RegistryVer
  * Resolves back to config path: CROSS_API_URL + `/${id}`
  */
 export async function fetchCrossVerification(id: string): Promise<CrossVerification> {
+  await applySecurityShield();
+  validateEndpoint(CROSS_API_URL);
   console.log(`[API GATEWAY] Requesting Cross verification reports from: ${CROSS_API_URL}/${id}`);
   
   const merchant = SAMPLE_MARKET_MERCHANTS.find(m => m.id === id);
@@ -555,7 +583,7 @@ export interface ViolationRecord {
 
 export interface RiskVerification {
   id: string;
-  level: 'low' | 'medium' | 'high';
+  level: 'low' | 'medium' | 'high' | 'none';
   violations: ViolationRecord[];
 }
 
@@ -564,6 +592,8 @@ export interface RiskVerification {
  * Resolves back to config path: RISK_API_URL + `/${id}`
  */
 export async function fetchRiskVerification(id: string): Promise<RiskVerification> {
+  await applySecurityShield();
+  validateEndpoint(RISK_API_URL);
   console.log(`[API GATEWAY] Requesting Risk Assessment from: ${RISK_API_URL}/${id}`);
 
   // Simulate remote lookup
@@ -648,6 +678,8 @@ export interface ProductPhotosVerification {
  * Resolves back to config path: FACTORY_IMAGES_API_URL + `/${id}`
  */
 export async function fetchFactoryImages(id: string): Promise<FactoryImagesVerification> {
+  await applySecurityShield();
+  validateEndpoint(FACTORY_IMAGES_API_URL);
   console.log(`[API GATEWAY] Requesting Factory Images from: ${FACTORY_IMAGES_API_URL}/${id}`);
 
   return new Promise((resolve, reject) => {
@@ -695,6 +727,8 @@ export async function fetchFactoryImages(id: string): Promise<FactoryImagesVerif
  * Resolves back to config path: PRODUCT_PHOTOS_API_URL + `/${id}`
  */
 export async function fetchProductPhotos(id: string): Promise<ProductPhotosVerification> {
+  await applySecurityShield();
+  validateEndpoint(PRODUCT_PHOTOS_API_URL);
   console.log(`[API GATEWAY] Requesting Product Photos from: ${PRODUCT_PHOTOS_API_URL}/${id}`);
 
   return new Promise((resolve, reject) => {

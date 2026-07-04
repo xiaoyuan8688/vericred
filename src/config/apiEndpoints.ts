@@ -14,3 +14,7 @@ export const CROSS_API_URL = "/api/cross";
 export const RISK_API_URL = "/api/risk";
 export const FACTORY_IMAGES_API_URL = "/api/factory_images";
 export const PRODUCT_PHOTOS_API_URL = "/api/product_photos";
+
+// System release version
+export const SYSTEM_VERSION = "VerCred v1.0";
+
