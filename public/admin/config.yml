@@ -2,7 +2,7 @@ backend:
   name: github
   repo: xiaoyuan8688/vericred
   branch: main
-  base_url: https://vericred.pages.dev
+
   auth_endpoint: auth
   squash_merges: true
   commit_messages:
