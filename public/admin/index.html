@@ -10,10 +10,13 @@
   </style>
 </head>
 <body>
-  <!-- 加载 Decap CMS 3.6.1，jsdelivr CDN 确保拿到正确版本 -->
+  <!-- ★ 关键修复：阻止 Decap CMS 自动初始化（否则会用 Netlify 默认值） -->
+  <script>window.CMS_MANUAL_INIT = true;</script>
+
+  <!-- 加载 Decap CMS（jsdelivr CDN，锁定 3.6.1） -->
   <script src="https://cdn.jsdelivr.net/npm/decap-cms@3.6.1/dist/decap-cms.js"></script>
 
-  <!-- 内嵌完整配置，CMS.init() 直接注入，不依赖 config.yml 加载顺序 -->
+  <!-- 手动注入配置：base_url 指向自建 OAuth 代理，彻底杜绝 Netlify -->
   <script>
   CMS.init({
     config: {
@@ -21,7 +24,7 @@
         name: "github",
         repo: "xiaoyuan8688/vericred",
         branch: "main",
-        base_url: "https://api.decapcms.org",
+        base_url: "https://vericred.pages.dev",
         auth_endpoint: "auth",
         squash_merges: true,
         commit_messages: {
@@ -80,10 +83,10 @@
                     { label: "成立年份", name: "establishedYear", widget: "number", value_type: "int", default: 2020 },
                     { label: "核验员工数", name: "verifiedWorkers", widget: "number", value_type: "int", default: 100 },
                     { label: "厂区面积 (m²)", name: "plantAreaSqM", widget: "number", value_type: "int", default: 5000 },
-                    { label: "工商注册核验 ✓", name: "registryVerified", widget: "boolean", default: false },
-                    { label: "实地探访核验 ✓", name: "siteVerified", widget: "boolean", default: false },
-                    { label: "海关数据核验 ✓", name: "customsVerified", widget: "boolean", default: false },
-                    { label: "财务信度核验 ✓", name: "financeVerified", widget: "boolean", default: false },
+                    { label: "工商注册核验", name: "registryVerified", widget: "boolean", default: false },
+                    { label: "实地探访核验", name: "siteVerified", widget: "boolean", default: false },
+                    { label: "海关数据核验", name: "customsVerified", widget: "boolean", default: false },
+                    { label: "财务信度核验", name: "financeVerified", widget: "boolean", default: false },
                     { label: "资质证书", name: "certificates", widget: "list", summary: "{{cert}}",
                       field: { label: "证书名称", name: "cert", widget: "string" } }
                   ]
@@ -165,7 +168,7 @@
                   name: "requests",
                   label: "匹配记录",
                   widget: "list",
-                  summary: "{{sourceCn}} ➜ {{fields.targetRegion}} 【{{fields.status}}】",
+                  summary: "{{sourceCn}} -> {{fields.targetRegion}} 【{{fields.status}}】",
                   collapsed: true,
                   fields: [
                     { label: "ID", name: "id", widget: "string" },
