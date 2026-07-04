@@ -1,3 +1,5 @@
+auth-endpoint: https://vericred.pages.dev/auth/callback
+
 backend:
   name: github
   repo: xiaoyuan8688/vericred
