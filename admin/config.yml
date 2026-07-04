@@ -2,6 +2,8 @@ backend:
   name: github
   repo: xiaoyuan8688/vericred
   branch: main
+  base_url: https://api.decapcms.org
+
 media_folder: "images/uploads"
 public_folder: "/images/uploads"
 
